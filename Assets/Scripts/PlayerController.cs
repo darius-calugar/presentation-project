@@ -2,16 +2,16 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+	[SerializeField] private float moveSpeed;
+	[SerializeField] private float jumpForce;
+	[SerializeField] private float playerGravity;
+
 	private Rigidbody _rigidbody;
 
 	private Vector2? _collisionOffset;
 	private Vector2? _collisionNormal;
 	private Vector2  _inputMovement = Vector2.zero;
 	private bool     _shouldJump;
-
-	[SerializeField] private float moveSpeed;
-	[SerializeField] private float jumpForce;
-	[SerializeField] private float playerGravity;
 
 	private void Start()
 	{
@@ -21,25 +21,13 @@ public class PlayerController : MonoBehaviour
 
 	private void Update()
 	{
-		_inputMovement = new Vector2(
-			Input.GetAxis("Horizontal"),
-			Input.GetAxis("Vertical")
-		);
-		_shouldJump = Input.GetButton("Jump");
+		GetInput();
 	}
 
 	private void FixedUpdate()
 	{
-		_rigidbody.velocity = new Vector3(
-			moveSpeed * _inputMovement.x,
-			_rigidbody.velocity.y,
-			0
-		);
-		if (_shouldJump && CanJump())
-		{
-			_rigidbody.velocity += Vector3.up * jumpForce;
-			_shouldJump         =  false;
-		}
+		Move();
+		if (_shouldJump && CanJump()) Jump();
 	}
 
 	private void OnCollisionStay(Collision other)
@@ -52,7 +40,7 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-	private void OnCollisionExit(Collision other)
+	private void OnCollisionExit()
 	{
 		_collisionOffset = null;
 		_collisionNormal = null;
@@ -70,8 +58,32 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
+	private void GetInput()
+	{
+		_inputMovement = new Vector2(
+			Input.GetAxis("Horizontal"),
+			Input.GetAxis("Vertical")
+		);
+		_shouldJump = Input.GetButton("Jump");
+	}
+
 	private bool CanJump()
 	{
-		return _collisionNormal.HasValue && Vector2.Dot(_collisionNormal.Value, Vector2.up) > 0f;
+		return _collisionNormal.HasValue && Vector2.Dot(_collisionNormal.Value, Vector2.up) > .5f;
+	}
+
+	private void Move()
+	{
+		_rigidbody.velocity = new Vector3(
+			moveSpeed * _inputMovement.x,
+			_rigidbody.velocity.y,
+			0
+		);
+	}
+
+	private void Jump()
+	{
+		_rigidbody.velocity += Vector3.up * jumpForce;
+		_shouldJump         =  false;
 	}
 }
