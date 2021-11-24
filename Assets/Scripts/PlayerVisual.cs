@@ -33,7 +33,7 @@ public class PlayerVisual : MonoBehaviour
 			Vector3.one +
 			Vector3.up * displacement +
 			Vector3.left * displacement;
-		if (currentVelocity.magnitude > .1)
+		if (currentVelocity.magnitude > float.Epsilon)
 			transform.rotation = Quaternion.LookRotation(Vector3.forward, currentVelocity);
 	}
 }
