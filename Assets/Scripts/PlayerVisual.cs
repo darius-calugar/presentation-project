@@ -27,10 +27,13 @@ public class PlayerVisual : MonoBehaviour
 		_movingAverage = _movingAverage * (1 - movingAverageForce) +
 						 Math.Min(Math.Max(acceleration * accelerationWeight, -accelerationClamp), accelerationClamp) * movingAverageForce;
 
+		var displacement = _movingAverage + currentVelocity.magnitude * currentVelocityWeight;
+		transform.localPosition = Vector3.down * displacement / 2;
 		transform.localScale =
 			Vector3.one +
-			Vector3.up * (_movingAverage + currentVelocity.magnitude * currentVelocityWeight) +
-			Vector3.left * _movingAverage;
-		transform.rotation = Quaternion.LookRotation(Vector3.forward, currentVelocity);
+			Vector3.up * displacement +
+			Vector3.left * displacement;
+		if (currentVelocity.magnitude > .1)
+			transform.rotation = Quaternion.LookRotation(Vector3.forward, currentVelocity);
 	}
 }
