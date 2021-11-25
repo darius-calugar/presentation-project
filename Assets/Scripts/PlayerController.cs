@@ -6,13 +6,10 @@ public class PlayerController : MonoBehaviour
 	[SerializeField] private float jumpForce;
 	[SerializeField] private float playerGravity;
 	[SerializeField] private float groundMoveSpeed;
-	[SerializeField] private float groundMoveTime;
 	[SerializeField] private float groundAcceleration;
 	[SerializeField] private float groundDeceleration;
 	[SerializeField] private float groundDrag;
-	[SerializeField] private float airMoveSpeed;
 	[SerializeField] private float airMoveAcceleration;
-	[SerializeField] private float airMoveDeceleration;
 
 	private Rigidbody _rigidbody;
 
@@ -84,33 +81,33 @@ public class PlayerController : MonoBehaviour
 	{
 		if (OnGround())
 		{
-			var currentSpeed = _rigidbody.velocity.x;
-			print($"speed: {currentSpeed}");
-			var targetSpeed = _inputMovement.x * groundMoveSpeed;
-			print($"target: {targetSpeed}");
-			float speedDelta = 0;
+			var   currentSpeed = _rigidbody.velocity.x;
+			var   targetSpeed  = _inputMovement.x * groundMoveSpeed;
+			float acceleration = 0;
 			if (targetSpeed - currentSpeed > 0)
 			{
 				if (currentSpeed >= 0 && targetSpeed >= 0)
-					speedDelta = Math.Max(Math.Min(groundAcceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+					acceleration = Math.Max(Math.Min(groundAcceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
 				else if (currentSpeed < 0 && targetSpeed > 0)
-					speedDelta = Math.Max(Math.Min(groundDeceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+					acceleration = Math.Max(Math.Min(groundDeceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
 				else
-					speedDelta = Math.Max(Math.Min(groundDrag * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+					acceleration = Math.Max(Math.Min(groundDrag * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
 			}
 			else if (targetSpeed - currentSpeed < float.Epsilon)
 			{
 				if (currentSpeed <= 0 && targetSpeed <= 0)
-					speedDelta = Math.Min(Math.Max(-groundAcceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+					acceleration = Math.Min(Math.Max(-groundAcceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
 				else if (currentSpeed > 0 && targetSpeed < 0)
-					speedDelta = Math.Min(Math.Max(-groundDeceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+					acceleration = Math.Min(Math.Max(-groundDeceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
 				else
-					speedDelta = Math.Min(Math.Max(-groundDrag * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+					acceleration = Math.Min(Math.Max(-groundDrag * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
 			}
-
-			print($"delta: {speedDelta}");
-			print(speedDelta);
-			_rigidbody.velocity += Vector3.right * speedDelta;
+			_rigidbody.velocity += Vector3.right * acceleration;
+		}
+		else
+		{
+			var acceleration = _inputMovement.x * airMoveAcceleration * Time.fixedDeltaTime;
+			_rigidbody.velocity += Vector3.right * acceleration;
 		}
 	}
 

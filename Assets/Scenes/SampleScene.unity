@@ -592,13 +592,10 @@ MonoBehaviour:
   jumpForce: 7
   playerGravity: 20
   groundMoveSpeed: 20
-  groundMoveTime: 2
   groundAcceleration: 30
   groundDeceleration: 50
   groundDrag: 10
-  airMoveSpeed: 0
-  airMoveAcceleration: 0
-  airMoveDeceleration: 0
+  airMoveAcceleration: 10
 --- !u!54 &720181552
 Rigidbody:
   m_ObjectHideFlags: 0
