@@ -1,10 +1,18 @@
+using System;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-	[SerializeField] private float moveSpeed;
 	[SerializeField] private float jumpForce;
 	[SerializeField] private float playerGravity;
+	[SerializeField] private float groundMoveSpeed;
+	[SerializeField] private float groundMoveTime;
+	[SerializeField] private float groundAcceleration;
+	[SerializeField] private float groundDeceleration;
+	[SerializeField] private float groundDrag;
+	[SerializeField] private float airMoveSpeed;
+	[SerializeField] private float airMoveAcceleration;
+	[SerializeField] private float airMoveDeceleration;
 
 	private Rigidbody _rigidbody;
 
@@ -27,7 +35,7 @@ public class PlayerController : MonoBehaviour
 	private void FixedUpdate()
 	{
 		Move();
-		if (_shouldJump && CanJump()) Jump();
+		if (_shouldJump && OnGround()) Jump();
 	}
 
 	private void OnCollisionStay(Collision other)
@@ -67,18 +75,43 @@ public class PlayerController : MonoBehaviour
 		_shouldJump = Input.GetButton("Jump");
 	}
 
-	private bool CanJump()
+	private bool OnGround()
 	{
 		return _collisionNormal.HasValue && Vector2.Dot(_collisionNormal.Value, Vector2.up) > .5f;
 	}
 
 	private void Move()
 	{
-		_rigidbody.velocity = new Vector3(
-			moveSpeed * _inputMovement.x,
-			_rigidbody.velocity.y,
-			0
-		);
+		if (OnGround())
+		{
+			var currentSpeed = _rigidbody.velocity.x;
+			print($"speed: {currentSpeed}");
+			var targetSpeed = _inputMovement.x * groundMoveSpeed;
+			print($"target: {targetSpeed}");
+			float speedDelta = 0;
+			if (targetSpeed - currentSpeed > 0)
+			{
+				if (currentSpeed >= 0 && targetSpeed >= 0)
+					speedDelta = Math.Max(Math.Min(groundAcceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+				else if (currentSpeed < 0 && targetSpeed > 0)
+					speedDelta = Math.Max(Math.Min(groundDeceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+				else
+					speedDelta = Math.Max(Math.Min(groundDrag * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+			}
+			else if (targetSpeed - currentSpeed < float.Epsilon)
+			{
+				if (currentSpeed <= 0 && targetSpeed <= 0)
+					speedDelta = Math.Min(Math.Max(-groundAcceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+				else if (currentSpeed > 0 && targetSpeed < 0)
+					speedDelta = Math.Min(Math.Max(-groundDeceleration * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+				else
+					speedDelta = Math.Min(Math.Max(-groundDrag * Time.fixedDeltaTime, targetSpeed - currentSpeed), 0);
+			}
+
+			print($"delta: {speedDelta}");
+			print(speedDelta);
+			_rigidbody.velocity += Vector3.right * speedDelta;
+		}
 	}
 
 	private void Jump()
