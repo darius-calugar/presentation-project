@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-	[SerializeField] private float jumpForce;
+	[SerializeField] private float jumpVerticalForce;
+	[SerializeField] private float jumpHorizontalForce;
 	[SerializeField] private float playerGravity;
 	[SerializeField] private float groundMoveSpeed;
 	[SerializeField] private float groundAcceleration;
@@ -113,7 +114,10 @@ public class PlayerController : MonoBehaviour
 
 	private void Jump()
 	{
-		_rigidbody.velocity += Vector3.up * jumpForce;
-		_shouldJump         =  false;
+		_rigidbody.velocity += new Vector3(
+			jumpHorizontalForce * _inputMovement.x,
+			jumpVerticalForce
+		);
+		_shouldJump = false;
 	}
 }
