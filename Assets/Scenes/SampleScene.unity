@@ -3186,10 +3186,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 720181551}
-  movingAverageForce: 0.5
+  movingAverageForce: 0.25
   accelerationWeight: 0.3
   accelerationClamp: 0.3
-  currentVelocityWeight: 0.001
+  currentVelocityWeight: 0.005
 --- !u!23 &1777373877
 MeshRenderer:
   m_ObjectHideFlags: 0

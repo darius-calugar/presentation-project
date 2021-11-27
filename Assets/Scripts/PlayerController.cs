@@ -115,7 +115,7 @@ public class PlayerController : MonoBehaviour
 			.OrderBy(hook => Vector2.Distance(transform.position, hook.transform.position))
 			.FirstOrDefault();
 		if (!hooked) activeHook = closestHook;
-		canHook = Vector2.Distance(transform.position, closestHook.transform.position) <= hookRange;
+		canHook = closestHook != null && Vector2.Distance(transform.position, closestHook.transform.position) <= hookRange;
 
 		if (canHook && shouldHook)
 		{
