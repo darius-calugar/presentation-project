@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 public class PlayerController : MonoBehaviour
 {
@@ -24,24 +23,25 @@ public class PlayerController : MonoBehaviour
 	private Rigidbody _rigidbody;
 
 	// Movement state
-	private Vector2? _collisionOffset;
-	private Vector2? _collisionNormal;
-	private Vector2  _inputMovement = Vector2.zero;
-	private bool     _shouldJump;
+	[HideInInspector] public Vector2? collisionOffset;
+	[HideInInspector] public Vector2? collisionNormal;
+	[HideInInspector] public Vector2  inputMovement = Vector2.zero;
+	[HideInInspector] public bool     shouldJump;
 
 	// Hooks state
-	private List<Hook> _hooks;
-	private Hook       _closestHook;
-	private bool       _canHook;
-	private bool       _hooked;
-	private bool       _shouldHook;
-	private bool       _shouldUnhook;
+	[HideInInspector] public List<Hook> hooks;
+	[HideInInspector] public Hook       activeHook;
+	[HideInInspector] public Hook       closestHook;
+	[HideInInspector] public bool       canHook;
+	[HideInInspector] public bool       hooked;
+	[HideInInspector] public bool       shouldHook;
+	[HideInInspector] public bool       shouldUnhook;
 
 	private void Start()
 	{
 		_rigidbody      = GetComponent<Rigidbody>();
 		Physics.gravity = Vector3.down * playerGravity;
-		_hooks          = FindObjectsOfType<Hook>().ToList();
+		hooks           = FindObjectsOfType<Hook>().ToList();
 	}
 
 	private void Update()
@@ -59,37 +59,37 @@ public class PlayerController : MonoBehaviour
 	private void OnCollisionStay(Collision other)
 	{
 		var contact = other.GetContact(0);
-		if (_collisionNormal == null || Vector2.Dot(contact.normal, Vector2.up) > Vector2.Dot(_collisionNormal.Value, Vector2.up))
+		if (collisionNormal == null || Vector2.Dot(contact.normal, Vector2.up) > Vector2.Dot(collisionNormal.Value, Vector2.up))
 		{
-			_collisionOffset = contact.point - transform.position;
-			_collisionNormal = contact.normal;
+			collisionOffset = contact.point - transform.position;
+			collisionNormal = contact.normal;
 		}
 	}
 
 	private void OnCollisionExit()
 	{
-		_collisionOffset = null;
-		_collisionNormal = null;
+		collisionOffset = null;
+		collisionNormal = null;
 	}
 
 	private void OnDrawDebug()
 	{
-		if (_collisionOffset.HasValue && _collisionNormal.HasValue)
+		if (collisionOffset.HasValue && collisionNormal.HasValue)
 		{
 			Debug.DrawRay(
-				(Vector3)_collisionOffset.Value + transform.position,
-				_collisionNormal.Value.normalized,
+				(Vector3)collisionOffset.Value + transform.position,
+				collisionNormal.Value.normalized,
 				Color.red
 			);
 		}
-		foreach (var hook in _hooks)
+		foreach (var hook in hooks)
 		{
 			Debug.DrawLine(
 				transform.position,
 				hook.transform.position,
-				hook == _closestHook
-					? _canHook
-						? _hooked
+				hook == closestHook
+					? canHook
+						? hooked
 							? Color.red
 							: Color.green
 						: Color.yellow
@@ -100,37 +100,38 @@ public class PlayerController : MonoBehaviour
 
 	private void GetInput()
 	{
-		_inputMovement = new Vector2(
+		inputMovement = new Vector2(
 			Input.GetAxis("Horizontal"),
 			Input.GetAxis("Vertical")
 		);
-		_shouldJump   = Input.GetButton("Jump");
-		_shouldHook   = Input.GetButtonDown("Hook");
-		_shouldUnhook = Input.GetButtonUp("Hook");
+		shouldJump   = Input.GetButton("Jump");
+		shouldHook   = Input.GetButtonDown("Hook");
+		shouldUnhook = Input.GetButtonUp("Hook");
 	}
 
 	private void ComputeHookState()
 	{
-		_closestHook = _hooks
+		closestHook = hooks
 			.OrderBy(hook => Vector2.Distance(transform.position, hook.transform.position))
-			.First();
-		_canHook = Vector2.Distance(transform.position, _closestHook.transform.position) <= hookRange;
+			.FirstOrDefault();
+		if (!hooked) activeHook = closestHook;
+		canHook = Vector2.Distance(transform.position, closestHook.transform.position) <= hookRange;
 
-		if (_canHook && _shouldHook)
+		if (canHook && shouldHook)
 		{
-			_hooked     = true;
-			_shouldHook = false;
+			hooked     = true;
+			shouldHook = false;
 		}
-		if (_hooked && _shouldUnhook)
+		if (hooked && shouldUnhook)
 		{
-			_hooked       = false;
-			_shouldUnhook = false;
+			hooked       = false;
+			shouldUnhook = false;
 		}
 	}
 
 	private bool OnGround()
 	{
-		return _collisionNormal.HasValue && Vector2.Dot(_collisionNormal.Value, Vector2.up) > .5f;
+		return collisionNormal.HasValue && Vector2.Dot(collisionNormal.Value, Vector2.up) > .5f;
 	}
 
 	private void Move()
@@ -139,7 +140,7 @@ public class PlayerController : MonoBehaviour
 		if (OnGround())
 		{
 			var currentSpeed = _rigidbody.velocity.x;
-			var targetSpeed  = _inputMovement.x * groundMoveSpeed;
+			var targetSpeed  = inputMovement.x * groundMoveSpeed;
 			if (targetSpeed - currentSpeed > 0)
 			{
 				if (currentSpeed >= 0 && targetSpeed >= 0)
@@ -161,24 +162,24 @@ public class PlayerController : MonoBehaviour
 		}
 		else
 		{
-			acceleration = Vector2.right * (_inputMovement.x * airMoveAcceleration * Time.fixedDeltaTime);
+			acceleration = Vector2.right * (inputMovement.x * airMoveAcceleration * Time.fixedDeltaTime);
 		}
 
-		if (_shouldJump && OnGround())
+		if (shouldJump && OnGround())
 		{
 			acceleration += new Vector2(
-				jumpHorizontalForce * _inputMovement.x,
+				jumpHorizontalForce * inputMovement.x,
 				jumpVerticalForce
 			);
-			_shouldJump = false;
+			shouldJump = false;
 		}
 
 		_rigidbody.velocity += (Vector3)acceleration;
 
 		Debug.DrawLine(transform.position, transform.position + _rigidbody.velocity, Color.blue);
-		if (_hooked)
+		if (hooked)
 		{
-			var hookDirection = (_closestHook.transform.position - transform.position).normalized;
+			var hookDirection = (activeHook.transform.position - transform.position).normalized;
 			var hookPull      = -Vector2.Dot(_rigidbody.velocity, hookDirection);
 			if (hookPull > 0)
 			{

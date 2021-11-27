@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class PlayerVisual : MonoBehaviour
+public class PlayerVisualCube : MonoBehaviour
 {
 	[SerializeField]                private PlayerController player;
 	[SerializeField] [Range(0, 1f)] private float            movingAverageForce;
