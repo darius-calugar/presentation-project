@@ -111,11 +111,14 @@ public class PlayerController : MonoBehaviour
 
 	private void ComputeHookState()
 	{
+		var position = transform.position;
 		closestHook = hooks
-			.OrderBy(hook => Vector2.Distance(transform.position, hook.transform.position))
-			.FirstOrDefault();
+			.OrderBy(hook => Vector2.Distance(position, hook.transform.position))
+			.FirstOrDefault(hook => !Physics.Raycast(position, hook.transform.position - transform.position, Vector2.Distance(position, hook.transform.position)));
 		if (!hooked) activeHook = closestHook;
 		canHook = closestHook != null && Vector2.Distance(transform.position, closestHook.transform.position) <= hookRange;
+		if (activeHook != null && Physics.Raycast(position, activeHook.transform.position - transform.position, Vector2.Distance(position, activeHook.transform.position)))
+			shouldUnhook = true;
 
 		if (canHook && shouldHook)
 		{
