@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
+using Object = System.Object;
 
 public class PlayerController : MonoBehaviour
 {
+	private GameController game;
+	private Rigidbody      thisRigidbody;
+
 	// Meta
 	[SerializeField] private bool secondary;
 
@@ -22,8 +26,6 @@ public class PlayerController : MonoBehaviour
 	// Hooks
 	[SerializeField] private float hookRange;
 	[SerializeField] private float maxHookPull;
-
-	private Rigidbody thisRigidbody;
 
 	// Movement state
 	[HideInInspector] public Vector2? collisionOffset;
@@ -42,7 +44,9 @@ public class PlayerController : MonoBehaviour
 
 	private void Start()
 	{
-		thisRigidbody   = GetComponent<Rigidbody>();
+		game          = FindObjectOfType<GameController>();
+		thisRigidbody = GetComponent<Rigidbody>();
+
 		Physics.gravity = Vector3.down * playerGravity;
 		hooks           = FindObjectsOfType<Hook>().ToList();
 	}
@@ -57,6 +61,16 @@ public class PlayerController : MonoBehaviour
 	private void FixedUpdate()
 	{
 		Move();
+	}
+
+	private void OnTriggerEnter(Collider other)
+	{
+		if (other.GetComponent<Point>() == null) return;
+		if (!secondary)
+			game.AddP1Score();
+		else
+			game.AddP2Score();
+		Destroy(other.gameObject);
 	}
 
 	private void OnCollisionStay(Collision other)
