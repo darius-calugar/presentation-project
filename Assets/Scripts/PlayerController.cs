@@ -6,6 +6,9 @@ using UnityEngine.SocialPlatforms;
 
 public class PlayerController : MonoBehaviour
 {
+	// Meta
+	[SerializeField] private bool secondary;
+
 	// Movement
 	[SerializeField] private float jumpVerticalForce;
 	[SerializeField] private float jumpHorizontalForce;
@@ -20,7 +23,7 @@ public class PlayerController : MonoBehaviour
 	[SerializeField] private float hookRange;
 	[SerializeField] private float maxHookPull;
 
-	private Rigidbody _rigidbody;
+	private Rigidbody thisRigidbody;
 
 	// Movement state
 	[HideInInspector] public Vector2? collisionOffset;
@@ -39,7 +42,7 @@ public class PlayerController : MonoBehaviour
 
 	private void Start()
 	{
-		_rigidbody      = GetComponent<Rigidbody>();
+		thisRigidbody   = GetComponent<Rigidbody>();
 		Physics.gravity = Vector3.down * playerGravity;
 		hooks           = FindObjectsOfType<Hook>().ToList();
 	}
@@ -100,13 +103,14 @@ public class PlayerController : MonoBehaviour
 
 	private void GetInput()
 	{
+		var suffix = secondary ? "P2" : "P1";
 		inputMovement = new Vector2(
-			Input.GetAxis("Horizontal"),
-			Input.GetAxis("Vertical")
+			Input.GetAxis($"Horizontal{suffix}"),
+			Input.GetAxis($"Vertical{suffix}")
 		);
-		shouldJump   = Input.GetButton("Jump");
-		shouldHook   = Input.GetButtonDown("Hook");
-		shouldUnhook = Input.GetButtonUp("Hook");
+		shouldJump   = Input.GetButton($"Jump{suffix}");
+		shouldHook   = Input.GetButtonDown($"Hook{suffix}");
+		shouldUnhook = Input.GetButtonUp($"Hook{suffix}");
 	}
 
 	private void ComputeHookState()
@@ -142,7 +146,7 @@ public class PlayerController : MonoBehaviour
 		var acceleration = Vector2.zero;
 		if (OnGround())
 		{
-			var currentSpeed = _rigidbody.velocity.x;
+			var currentSpeed = thisRigidbody.velocity.x;
 			var targetSpeed  = inputMovement.x * groundMoveSpeed;
 			if (targetSpeed - currentSpeed > 0)
 			{
@@ -177,17 +181,17 @@ public class PlayerController : MonoBehaviour
 			shouldJump = false;
 		}
 
-		_rigidbody.velocity += (Vector3)acceleration;
+		thisRigidbody.velocity += (Vector3)acceleration;
 
-		Debug.DrawLine(transform.position, transform.position + _rigidbody.velocity, Color.blue);
+		Debug.DrawLine(transform.position, transform.position + thisRigidbody.velocity, Color.blue);
 		if (hooked)
 		{
 			var hookDirection = (activeHook.transform.position - transform.position).normalized;
-			var hookPull      = -Vector2.Dot(_rigidbody.velocity, hookDirection);
+			var hookPull      = -Vector2.Dot(thisRigidbody.velocity, hookDirection);
 			if (hookPull > 0)
 			{
 				var normalizedHookPull = maxHookPull * hookPull / (hookPull + maxHookPull);
-				_rigidbody.velocity += hookDirection * normalizedHookPull;
+				thisRigidbody.velocity += hookDirection * normalizedHookPull;
 			}
 		}
 	}
